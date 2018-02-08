@@ -1,0 +1,13 @@
+Input	Output	O	k	kp	kpt	Max	NoCoda	Onset
+tV	tV	1	0	0	-1	0	0	0
+tV	V	0	0	0	0	-1	0	-1
+pV	pV	1	0	-1	-1	0	0	0
+pV	V	0	0	0	0	-1	0	-1
+kV	kV	1	-1	-1	-1	0	0	0
+kV	V	0	0	0	0	-1	0	-1
+Vt	Vt	1	0	0	-1	0	-1	0
+Vt	V	0	0	0	0	-1	0	0
+Vp	Vp	1	0	-1	-1	0	-1	0
+Vp	V	0	0	0	0	-1	0	0
+Vk	Vk	1	-1	-1	-1	0	-1	0
+Vk	V	0	0	0	0	-1	0	0
