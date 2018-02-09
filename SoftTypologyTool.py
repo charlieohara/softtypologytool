@@ -82,7 +82,7 @@ def importtableau():
         start=[]
     suffix=tableaufile.split(".")[-1]
     if suffix=="txt":
-        consname = tableaufile[:-4] + "-cons"
+        consname = tableaufile[:-4] + "-cons.txt"
     else:
         consname = tableaufile[:-4] + "-cons"
     consfileinfo = {}
