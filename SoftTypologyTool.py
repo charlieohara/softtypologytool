@@ -80,7 +80,11 @@ def importtableau():
     global start
     if LOADING==False:
         start=[]
-    consname = tableaufile + "-cons"
+    suffix=tableaufile.split(".")[-1]
+    if suffix=="txt":
+        consname = tableaufile[:-4] + "-cons"
+    else:
+        consname = tableaufile[:-4] + "-cons"
     consfileinfo = {}
 
     def inweightpop():
@@ -790,7 +794,7 @@ runs=1
 
 #language={"tV":"tV","pV":"pV","kV":"V","Vt":"Vt","Vp":"Vp","Vk":"V"}
 #Generate the logically possible set of languages
-tableauname="test"
+tableauname="test.txt"
 
 
 languages=["tV pV kV Vt V V".split(),"tV pV kV Vt Vp Vk".split()]
