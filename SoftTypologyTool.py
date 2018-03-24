@@ -1,6 +1,6 @@
-# Soft Typology Tool v 0.2
+# Soft Typology Tool v 0.3
 # Charlie O'Hara
-# 2/8/18
+# 3/24/18
 # This tool performs simulations of generational learning using a Generational Stability Model.
 # The GUI allows input of tableau in the format used by OT-Help.
 # Currently this tool performs MaxEnt learning with a fixed LearningRate across all constraints
@@ -57,7 +57,7 @@ for x in freqconfusionmatrix:
     for y in confusers:
         confusionmatrix[x][y] = float(confusers[y]) / sum(confusers.values())
 
-print confusionmatrix
+#print confusionmatrix
 switch = False
 noONSET = False
 lastguy = False
