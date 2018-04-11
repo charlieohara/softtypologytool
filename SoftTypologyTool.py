@@ -1,6 +1,6 @@
 # Soft Typology Tool v 0.3
 # Charlie O'Hara
-# 3/24/18
+# 2/8/18
 # This tool performs simulations of generational learning using a Generational Stability Model.
 # The GUI allows input of tableau in the format used by OT-Help.
 # Currently this tool performs MaxEnt learning with a fixed LearningRate across all constraints
@@ -14,6 +14,7 @@
 # -Plot of generational change for the first run of each pattern
 # -Plot of the resulting typology (What do patterns become?)
 import pickle
+import os
 import numpy as np
 from Tkinter import *
 from tkFileDialog import askopenfilename
@@ -30,9 +31,14 @@ import matplotlib.pyplot as plt
 
 # TODO Add visualization of constraint weights?
 # TODO Export constraint weights and probs
-# TODO Figure out graph bugs --- seems like there's problems with the button swap for typology
+# TODO Figure out graph bugs --- after result typology the zoom is fucekd
+#TODO Add fast button?
 # TODO Maybe something with having too many languages in typology
 # TODO ADD average graphs?
+#TODO Multiple output candidates
+#TODO Lexical frequencies for languages saved??? read a file?
+#TODO Make it so you can have non-unique URs work?? worth it?
+#TODO add buttons (maybe keybinding to skip through graphs)
 system = "MaxEnt"
 iffirstgen = True
 ifgenmap = True
@@ -57,7 +63,7 @@ for x in freqconfusionmatrix:
     for y in confusers:
         confusionmatrix[x][y] = float(confusers[y]) / sum(confusers.values())
 
-#print confusionmatrix
+print confusionmatrix
 switch = False
 noONSET = False
 lastguy = False
@@ -84,12 +90,12 @@ for l in range(1,len(reader)):
 # print tableau
 variables = []
 weightentries = []
-
+freqs=[]
 
 def importtableau():
     tableaufile = userfile.get()
     file = open(tableaufile, "r")
-
+    global lexfreq
     global tableau
     reader = file.readlines()
     global inputorder
@@ -135,6 +141,33 @@ def importtableau():
             conweight.insert(END, start[con])
             # saveinitial()
         Button(initialweights, text="Save Initial Weights", command=saveinitial).grid()
+    def freqer():
+        global lexfreq
+        freqbubbles=[]
+        freqmaker= Toplevel()
+        def savefreq():
+            global lexfreq
+            tempfreq= []
+            for i in freqbubbles:
+                tempfreq.append(float(i.get()))
+            lexfreq=[i/sum(tempfreq) for i in tempfreq]
+            freqmaker.destroy()
+        def uniform():
+            for i in freqbubbles:
+                i.delete(0,END)
+                i.insert(END,float(1)/len(inputorder))
+        for inp in range(len(tableau)):
+            Label(freqmaker, text=inputorder[inp]).grid(row=inp, column=0)
+            if len(freqs) < len(tableau):
+                inpfreq= Entry(freqmaker)
+                freqbubbles.append(inpfreq)
+            else:
+                inpfreq = freqbubbles[inp]
+            inpfreq.grid(row=inp, column=1)
+            inpfreq.insert(END, lexfreq[inp])
+            # saveinitial()
+        Button(freqmaker, text="Save Lexical Frequencies", command=savefreq).grid()
+        Button(freqmaker, text="Uniform Distrbution",command=uniform).grid()
 
     if LOADING == False:
         try:
@@ -178,20 +211,23 @@ def importtableau():
             outputorder.append(output)
             if input in tableau:
                 tableau[input][output] = np.array(vect)
+
             else:
                 tableau[input] = {output: np.array(vect)}
+
                 d = collections.OrderedDict()
                 d[output] = np.array(vect)
                 tableau[input] = d
                 inputorder.append(input)
                 # print input
+        lexfreq=[float(1)/len(tableau) for x in tableau]
     # tableaubox.insert(END,''.join(reader))
     n = 0
     print inputorder
     global variables
     variables = []
     for i in range(len(inputorder)):
-        Button(master, text=inputorder[i]).grid(row=n + 1, column=4)
+        Button(master, text=inputorder[i],command=freqer).grid(row=n + 1, column=4)
         variables.append(IntVar())
         for j in range(len(tableau[inputorder[i]])):
             Radiobutton(master, text=tableau[inputorder[i]].keys()[j], variable=variables[i], value=j).grid(row=n + 1,
@@ -331,8 +367,26 @@ def runsims():
 
     def savesim():
         filename = "tableau" + "lr" + "gens" + "iterations" + "runs" + "massiveFile"
-        filename = "noerrSim of %s,%s" % (generations, iterations)
-        # TODO Prompt to save own name for file
+        filename = "Sim of %s,%s" % (generations, iterations)
+
+        if os.path.exists(filename):
+            #Change Filename
+            overwritepopup=Toplevel()
+            Label(overwritepopup,text="A file called '%s' already exists, do you want to overwrite?"%filename).grid()
+            newname=Entry(overwritepopup)
+            newname.insert(END,filename)
+            newname.grid()
+
+            def rename():
+                global filename
+                filename=newname.get()
+                overwritepopup.destroy()
+            Button(overwritepopup,text="Overwrite",command=overwritepopup.destroy).grid(column=0,row=3)
+            Button(overwritepopup,text="Rename",command=rename).grid(column=1,row=3)
+
+
+
+
         f = file(filename, "wb")
         pickle.dump(
             [inputorder, tableauname, tableau, start, savedpatterns, learningrate, generations, iterations, runs,
@@ -430,9 +484,14 @@ def runsims():
             plt.ylim([-.1, 1.1])
             plt.xlabel(xlabel)
             plt.ylabel("Probability")
+            plt.subplots_adjust(bottom=0.1, right=.9)
             canvas.show()
-
+        def smash():
+            global langbuts
+            graphpopup.destroy()
+            langbuts = []
         graphpopup = Toplevel()
+        graphpopup.protocol("WM_DELETE_WINDOW",smash)
         v = StringVar()
         v.set(itgraphs.keys()[0])
         runvar = IntVar()
@@ -458,10 +517,7 @@ def runsims():
         toolbar = NavigationToolbar2TkAgg(canvas, toolbar_frame)
         toolbar.update()
 
-        def smash():
-            global langbuts
-            graphpopup.destroy()
-            langbuts = []
+
 
         Button(graphpopup, text="Close", command=smash).grid()
         buildlangs()
@@ -542,7 +598,12 @@ def runsims():
                             if i % iterational == 0:
                                 updaterunner(initlangname, r, g, i)
                             # Choose a random input
-                            input = np.random.choice(tableau.keys(), 1)[0]
+
+                            #input = np.random.choice(tableau.keys(), 1)[0]
+                            properlyorderedlexfreq=[lexfreq[inputorder.index(inputur)] for inputur in tableau.keys()]
+                            #for x in range(len(tableau.keys())):
+                             #   print "%s. %s - %s"%(x, tableau.keys()[x],properlyorderedlexfreq[x])
+                            input = np.random.choice(tableau.keys(), 1,p=properlyorderedlexfreq)[0]
                             # Find observed output
                             if g > 0:  # Select it from the teacher's grammar
                                 observedoutput = output(teacherw, input)
@@ -788,7 +849,7 @@ else:
                        "Vk": {"Vk": np.array([-1, -1, -1, 0, 0, -1]), "V": np.array([0, 0, 0, -1, 0, 0])}
                        }
 tableau = {}
-
+lexfreq=[]
 errorrates = np.array([0.03, .1, 0, 0, 0, .2])
 errorrates = np.array([0, 0, 0, 0, 0, 0])
 
